@@ -26,3 +26,7 @@ Generated directory structure:
     │   
     └── xml
         └── L1Menu_sample-d1.xml
+
+## Contributing
+
+Make sure to increment the version number on template changes too.
