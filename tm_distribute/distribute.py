@@ -17,7 +17,7 @@ import re
 import uuid
 import sys, os
 
-__version__ = '0.0.1'
+__version__ = '0.0.2'
 
 RegexCamelSnake1=re.compile(r'([^_])([A-Z][a-z]+)')
 RegexCamelSnake2=re.compile(r'([a-z0-9])([A-Z])')
