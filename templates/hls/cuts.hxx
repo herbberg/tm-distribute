@@ -17,7 +17,7 @@ const {{ c.objects[0].type }}_obj_requ_t {{ c.name }}[{{ c.objects|count }}] = {
         .n_eta={{ o.eta|count }},
         .phi={{ o.phi|c_init_list }},
         .n_phi={{ o.phi|count }},
-{%- if c.objects[0].iso %}
+{%- if o.iso %}
         .iso_lut={{ o.iso }},
 {% endif %}
     },
