@@ -5,20 +5,10 @@
 
 namespace impl {
 namespace cuts {
-
-{% for c in conditions -%}
-const {{ c.objects[0].type }}_obj_requ_t {{ c.name }}[{{ c.objects|count }}] = {
-{%- for o in c.objects %}
-{%- if c.objects[0].type in ('eg', 'tau') %}
-    {.n_cuts={{ c.objects|count }}, .n_obj={{ o.slice.maximum }}, .pt={{ o.threshold|c_hex(4) }}, .eta={{ o.eta|c_init_list }}, .n_eta={{ o.eta|count }}, .phi={{ o.phi|c_init_list }}, .n_phi={{ o.phi|count }}, .iso_lut={{ o.isolationLUT }}},
-{%- elif c.objects[0].type == 'jet' %}
-    {.n_cuts={{ c.objects|count }}, .n_obj={{ o.slice.maximum }}, .pt={{ o.threshold|c_hex(4) }}, .eta={{ o.eta|c_init_list }}, .n_eta={{ o.eta|count }}, .phi={{ o.phi|c_init_list }}, .n_phi={{ o.phi|count }}},
-{%- elif c.objects[0].type == 'muon' %}
-    {.n_cuts={{ c.objects|count }}, .n_obj={{ o.slice.maximum }}, .phi={{ o.phi|c_init_list }}, .n_phi={{ o.phi|count }}, .pt={{ o.threshold|c_hex(4) }}, .qual_lut={{ o.qualityLUT }}, .eta={{ o.eta|c_init_list }}, .n_eta={{ o.eta|count }}, .iso_lut={{ o.isolationLUT }}, .requested_charge=muon_obj_requ_t::{{ o.charge }}},
-{%- endif %}
-{%- endfor %}
-};
-{% endfor %}
+{% include 'cuts/eg_cuts.hxx' %}
+{% include 'cuts/jet_cuts.hxx' %}
+{% include 'cuts/tau_cuts.hxx' %}
+{% include 'cuts/muon_cuts.hxx' %}
 } // namespace cuts
 } // namespace impl
 

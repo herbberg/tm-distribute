@@ -17,7 +17,7 @@ import re
 import uuid
 import sys, os
 
-__version__ = '0.0.3'
+__version__ = '0.0.4'
 
 RegexCamelSnake1=re.compile(r'([^_])([A-Z][a-z]+)')
 RegexCamelSnake2=re.compile(r'([a-z0-9])([A-Z])')
@@ -41,13 +41,31 @@ def murmurhash(s, bits=32):
     """Returns Murmurhash signed integer."""
     return tmEventSetup.getMmHashN(format(s))
 
+def cut_data_lut(data):
+    """Returns list of cut data values.
+    >>> cut_data_lut('0,2,3')
+    [0, 2, 3]
+    """
+    return [int(value.strip()) for value in data.split(',')]
+
+def c_boolean(arg):
+    """Format C99 compliant booleans, ignores other values.
+    >>> c_boolean(False)
+    'false'
+    >>> c_boolean(42)
+    42
+    """
+    if isinstance(arg, bool):
+        return format(arg).lower()
+    return arg
+
 def c_init_list(*args, **kwargs):
     """Returns C99 compliant initalizer list for C99 arrays and C99 structs."""
     values = []
     for arg in args:
-        values.append(format(arg))
+        values.append(format(c_boolean(arg)))
     for k, v in kwargs.iteritems():
-        values.append('.{}={}'.format(k, v))
+        values.append('.{}={}'.format(k, c_boolean(v)))
     return '{{{}}}'.format(', '.join([value for value in values]))
 
 class Range(object):
@@ -61,6 +79,34 @@ class Range(object):
         maximum = self.c_format.format(self.maximum)
         return c_init_list(minimum, maximum)
 
+class Lut(object):
+    """Generic C99 compliant look up table.
+    >>> l = Lut(true, 4)
+    >>> print(l)
+    [false, false, false, false]
+    >>> l[1] = True
+    print(l)
+    [false, true, false, false]
+    """
+    def __init__(self, value, size):
+        self.values = [value for _ in range(size)]
+    def __getitem__(self, key):
+        return self.values[key]
+    def __setitem__(self, key, value):
+        self.values[key] = value
+    def __len__(self):
+        return len(self.values)
+    def __str__(self):
+        return c_init_list(*self.values)
+
+def charge_encode(value):
+    """Encode charge value to HLS string literal."""
+    if value in ('positive', 'pos', '1'):
+        return 'POSITIVE' # positive
+    if value in ('negative', 'neg', '-1'):
+        return 'NEGATIVE' # negative
+    return 'IGNORE' # ignore
+
 class ObjectHelper(object):
     Types = {
         tmEventSetup.Egamma: 'eg',
@@ -68,15 +114,27 @@ class ObjectHelper(object):
         tmEventSetup.Tau: 'tau',
         tmEventSetup.Muon: 'muon',
     }
+    IsoTypes = {
+        tmEventSetup.Egamma: Lut(True, 4),
+        tmEventSetup.Jet: None,
+        tmEventSetup.Tau: Lut(True, 4),
+        tmEventSetup.Muon: Lut(True, 4),
+    }
+    QualTypes = {
+        tmEventSetup.Egamma: None,
+        tmEventSetup.Jet: None,
+        tmEventSetup.Tau: None,
+        tmEventSetup.Muon: Lut(True, 16),
+    }
     def __init__(self, handle):
         self.type = self.Types[handle.getType()]
         self.threshold = 0
         self.slice = Range(0, 12)
         self.eta = []
         self.phi = []
-        self.isolationLUT = '{1,1,1,1}'
-        self.qualityLUT = '{1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1}'
-        self.charge = 'IGNORE'
+        self.isolationLUT = self.IsoTypes[handle.getType()]
+        self.qualityLUT = self.QualTypes[handle.getType()]
+        self.charge = charge_encode('IGNORE')
         
         for cut in handle.getCuts():
             type_ = cut.getCutType()
@@ -89,11 +147,15 @@ class ObjectHelper(object):
             elif type_ == tmEventSetup.Phi:
                 self.phi.append(Range(cut.getMinimum().index, cut.getMaximum().index))
             elif type_ == tmEventSetup.Isolation:
-                self.isolationLUT
+                self.isolationLUT = Lut(False, 4)
+                for key in cut_data_lut(cut.getData()):
+                    self.isolationLUT[key] = True
             elif type_ == tmEventSetup.Quality:
-                self.qualityLUT
+                self.qualityLUT = Lut(False, 16)
+                for key in cut_data_lut(cut.getData()):
+                    self.qualityLUT[key] = True
             elif type_ == tmEventSetup.Charge:
-                self.charge
+                self.charge = charge_encode(cut.getData())
 
 class ConditionHelper(object):
     CombCondition = 'comb_cond'
