@@ -65,6 +65,8 @@ class ObjectHelper(object):
     Types = {
         tmEventSetup.Egamma: 'eg',
         tmEventSetup.Jet: 'jet',
+        tmEventSetup.Tau: 'tau',
+        tmEventSetup.Muon: 'muon',
     }
     def __init__(self, handle):
         self.type = self.Types[handle.getType()]
@@ -72,6 +74,10 @@ class ObjectHelper(object):
         self.slice = Range(0, 12)
         self.eta = []
         self.phi = []
+        self.isolationLUT = '{1,1,1,1}'
+        self.qualityLUT = '{1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1}'
+        self.charge = 'IGNORE'
+        
         for cut in handle.getCuts():
             type_ = cut.getCutType()
             if type_ == tmEventSetup.Threshold:
@@ -82,6 +88,12 @@ class ObjectHelper(object):
                 self.eta.append(Range(cut.getMinimum().index, cut.getMaximum().index))
             elif type_ == tmEventSetup.Phi:
                 self.phi.append(Range(cut.getMinimum().index, cut.getMaximum().index))
+            elif type_ == tmEventSetup.Isolation:
+                self.isolationLUT
+            elif type_ == tmEventSetup.Quality:
+                self.qualityLUT
+            elif type_ == tmEventSetup.Charge:
+                self.charge
 
 class ConditionHelper(object):
     CombCondition = 'comb_cond'
@@ -94,6 +106,14 @@ class ConditionHelper(object):
         tmEventSetup.DoubleJet: CombCondition,
         tmEventSetup.TripleJet: CombCondition,
         tmEventSetup.QuadJet: CombCondition,
+        tmEventSetup.SingleTau: CombCondition,
+        tmEventSetup.DoubleTau: CombCondition,
+        tmEventSetup.TripleTau: CombCondition,
+        tmEventSetup.QuadTau: CombCondition,
+        tmEventSetup.SingleMuon: CombCondition,
+        tmEventSetup.DoubleMuon: CombCondition,
+        tmEventSetup.TripleMuon: CombCondition,
+        tmEventSetup.QuadMuon: CombCondition,
     }
     def __init__(self, handle):
         self.name = snakecase(handle.getName())

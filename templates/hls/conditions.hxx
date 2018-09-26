@@ -18,12 +18,18 @@ struct logic
 {%- endfor %}
 
     /* Process input data and update condition signals. */
-    void process(const eg_obj_t eg[MAX_OBJ], const jet_obj_t jet[MAX_OBJ])
+    void process(const in_data_t& in_data)
     {
-#pragma HLS ARRAY_PARTITION variable=eg complete dim=1
-#pragma HLS ARRAY_PARTITION variable=jet complete dim=1
+#pragma HLS ARRAY_PARTITION variable=in_data.eg complete dim=1
+#pragma HLS ARRAY_PARTITION variable=in_data.jet complete dim=1
+#pragma HLS ARRAY_PARTITION variable=in_data.tau complete dim=1
+#pragma HLS ARRAY_PARTITION variable=in_data.muon complete dim=1
 {%- for c in conditions %}
-        {{ c.name }} = {{ c.type }}<{{ c.objects[0].type }}_obj_requ_t, {{ c.objects[0].type }}_obj_t ,{{ c.objects|count }}, 12>(cuts::{{ c.name }}, {{ c.objects[0].type }});
+{%- if c.objects[0].type in ('eg', 'jet', 'tau') %}
+        {{ c.name }} = {{ c.type }}<{{ c.objects[0].type }}_obj_requ_t, {{ c.objects[0].type }}_obj_t ,{{ c.objects|count }}, 12>(cuts::{{ c.name }}, in_data.{{ c.objects[0].type }});
+{%- elif c.objects[0].type == 'muon' %}
+        {{ c.name }} = {{ c.type }}<{{ c.objects[0].type }}_obj_requ_t, {{ c.objects[0].type }}_obj_t ,{{ c.objects|count }}, 8>(cuts::{{ c.name }}, in_data.{{ c.objects[0].type }});
+{%- endif %}
 {%- endfor %}
     }
 };
