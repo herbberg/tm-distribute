@@ -126,9 +126,15 @@ class ObjectHelper(object):
         tmEventSetup.Tau: None,
         tmEventSetup.Muon: Lut(True, 16),
     }
+    ComparisonTypes = {
+        tmEventSetup.GE: 'GE',
+        tmEventSetup.NE: 'NE',
+        tmEventSetup.EQ: 'EQ',
+    }
     def __init__(self, handle):
         self.type = self.Types[handle.getType()]
         self.threshold = 0
+        self.comparison_mode = self.ComparisonTypes[handle.getComparisonOperator()]
         self.slice = Range(0, 12)
         self.eta = []
         self.phi = []

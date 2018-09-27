@@ -5,10 +5,9 @@
 
 namespace impl {
 namespace cuts {
-{% include 'cuts/eg_cuts.hxx' %}
-{% include 'cuts/jet_cuts.hxx' %}
-{% include 'cuts/tau_cuts.hxx' %}
-{% include 'cuts/muon_cuts.hxx' %}
+{%- for c in conditions -%}
+{% include 'cuts/'~ c.objects[0].type ~'_cuts.hxx' %}
+{% endfor -%}
 } // namespace cuts
 } // namespace impl
 
