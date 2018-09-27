@@ -4,9 +4,8 @@ import tmGrammar
 import tmEventSetup
 
 from jinja2 import Environment, FileSystemLoader
-from jinja2 import filters, StrictUndefined
+from jinja2 import StrictUndefined
 
-from binascii import hexlify
 from collections import OrderedDict
 from distutils.version import StrictVersion
 
@@ -14,32 +13,14 @@ import argparse
 import datetime
 import shutil
 import re
-import uuid
 import sys, os
 
-__version__ = '0.0.4'
+# Formats
+import filters.generic
+import filters.hls
+import filters.vhdl
 
-RegexCamelSnake1=re.compile(r'([^_])([A-Z][a-z]+)')
-RegexCamelSnake2=re.compile(r'([a-z0-9])([A-Z])')
-
-def snakecase(label, separator='_'):
-    """Transformes camel case label to spaced lower case (snaked) label.
-    >>> snakecase('CamelCaseLabel')
-    'camel_case_label'
-    """
-    subbed = RegexCamelSnake1.sub(r'\1{sep}\2'.format(sep=separator), label)
-    return RegexCamelSnake2.sub(r'\1{sep}\2'.format(sep=separator), subbed).lower()
-
-def hexstr(s, bytes):
-    chars = bytes * 2
-    return "{0:0>{1}}".format(hexlify(s[::-1]), chars)[-chars:]
-
-def uuid2hex(s):
-    return uuid.UUID(s).hex.lower()
-
-def murmurhash(s, bits=32):
-    """Returns Murmurhash signed integer."""
-    return tmEventSetup.getMmHashN(format(s))
+__version__ = '0.0.5'
 
 def cut_data_lut(data):
     """Returns list of cut data values.
@@ -48,28 +29,8 @@ def cut_data_lut(data):
     """
     return [int(value.strip()) for value in data.split(',')]
 
-def c_boolean(arg):
-    """Format C99 compliant booleans, ignores other values.
-    >>> c_boolean(False)
-    'false'
-    >>> c_boolean(42)
-    42
-    """
-    if isinstance(arg, bool):
-        return format(arg).lower()
-    return arg
-
-def c_init_list(*args, **kwargs):
-    """Returns C99 compliant initalizer list for C99 arrays and C99 structs."""
-    values = []
-    for arg in args:
-        values.append(format(c_boolean(arg)))
-    for k, v in kwargs.iteritems():
-        values.append('.{}={}'.format(k, c_boolean(v)))
-    return '{{{}}}'.format(', '.join([value for value in values]))
-
 class Range(object):
-    """Range object with C99 compliant initalizer list string representation."""
+    """Range object with C99/C++98 compliant initalizer list string representation."""
     c_format = '0x{:04x}'
     def __init__(self, minimum, maximum):
         self.minimum = minimum
@@ -77,10 +38,10 @@ class Range(object):
     def __str__(self):
         minimum = self.c_format.format(self.minimum)
         maximum = self.c_format.format(self.maximum)
-        return c_init_list(minimum, maximum)
+        return filters.hls.init_list([minimum, maximum])
 
 class Lut(object):
-    """Generic C99 compliant look up table.
+    """Generic C++98 compliant look up table.
     >>> l = Lut(true, 4)
     >>> print(l)
     [false, false, false, false]
@@ -97,16 +58,18 @@ class Lut(object):
     def __len__(self):
         return len(self.values)
     def __str__(self):
-        return c_init_list(*self.values)
+        return filters.hls.init_list(self.values)
 
 class ObjectHelper(object):
     Types = {
         tmEventSetup.Egamma: 'eg',
         tmEventSetup.Jet: 'jet',
+        tmEventSetup.EXT: 'external',
     }
     IsoTypes = {
         tmEventSetup.Egamma: Lut(True, 4),
         tmEventSetup.Jet: None,
+        tmEventSetup.EXT: None,
     }
     def __init__(self, handle):
         self.type = self.Types[handle.getType()]
@@ -115,6 +78,7 @@ class ObjectHelper(object):
         self.eta = []
         self.phi = []
         self.iso = self.IsoTypes[handle.getType()]
+        self._init_external(handle)
         for cut in handle.getCuts():
             type_ = cut.getCutType()
             if type_ == tmEventSetup.Threshold:
@@ -129,9 +93,19 @@ class ObjectHelper(object):
                 self.iso = Lut(False, 4)
                 for key in cut_data_lut(cut.getData()):
                     self.iso[key] = True
+    def _init_external(self, handle):
+        """Handle external object specific attributes."""
+        # External objects only
+        if handle.getType() == tmEventSetup.EXT:
+            self.ext_signal_name = handle.getExternalSignalName()
+            self.ext_channel_id = handle.getExternalChannelId()
+        else:
+            self.ext_signal_name = None
+            self.ext_channel_id = None
 
 class ConditionHelper(object):
     CombCondition = 'comb_cond'
+    ExtCondition = 'ext_cond'
     Types = {
         tmEventSetup.SingleEgamma: CombCondition,
         tmEventSetup.DoubleEgamma: CombCondition,
@@ -141,9 +115,10 @@ class ConditionHelper(object):
         tmEventSetup.DoubleJet: CombCondition,
         tmEventSetup.TripleJet: CombCondition,
         tmEventSetup.QuadJet: CombCondition,
+        tmEventSetup.Externals: ExtCondition,
     }
     def __init__(self, handle):
-        self.name = snakecase(handle.getName())
+        self.name = filters.generic.snakecase(handle.getName())
         self.type = self.Types[handle.getType()]
         self.objects = []
         for object_ in handle.getObjects():
@@ -159,7 +134,7 @@ class SeedHelper(object):
     condition_namespace = 'cl'
     def __init__(self, handle):
         self.index = handle.getIndex()
-        self.name = snakecase(handle.getName())
+        self.name = filters.generic.snakecase(handle.getName())
         self.expression = self.__format_expr(handle.getExpressionInCondition())
     def __format_expr(self, expr):
         # replace operators
@@ -167,27 +142,19 @@ class SeedHelper(object):
             expr = re.sub(r'([\)\(\s])({})([\(\s])'.format(k), r'\1{}\3'.format(v), expr)
         # replace condition names
         def condition_rename(match):
-            name = snakecase(match.group(1))
+            name = filters.generic.snakecase(match.group(1))
             return "{}.{}".format(self.condition_namespace, name)
         expr = re.sub(r'([\w_]+_i\d+)', condition_rename, expr)
         return expr
 
-def c_hex(value, width=0):
-    """C99 compliant hex value."""
-    return '0x{0:0{1}x}'.format(value, width)
-
-def v_hex(value, width=0):
-    """Raw hex value."""
-    return '{0:0{1}x}'.format(value, width)
-
 CustomFilters = {
-    'c_hex': c_hex,
-    'c_init_list': lambda iterable: c_init_list(*iterable),
-    'hex': v_hex,
-    'hexstr': hexstr,
-    'hexuuid': uuid2hex,
-    'vhdl_bool': lambda b: ('false', 'true')[bool(b)],
-    'mmhashn': murmurhash,
+    'c_hex': filters.hls.hex,
+    'c_init_list': filters.hls.init_list,
+    'hex': filters.vhdl.hex,
+    'hexstr': filters.vhdl.hexstr,
+    'hexuuid': filters.vhdl.hexuuid,
+    'vhdl_bool': filters.vhdl.boolean,
+    'mmhashn': filters.generic.murmurhash,
 }
 
 class TemplateEngine(object):
