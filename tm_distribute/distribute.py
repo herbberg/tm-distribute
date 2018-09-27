@@ -95,11 +95,17 @@ class ObjectHelper(object):
         tmEventSetup.NE: 'NE',
         tmEventSetup.EQ: 'EQ',
     }
+    SliceTypes = {
+        tmEventSetup.Egamma: Range(0, 11),
+        tmEventSetup.Jet: Range(0, 11),
+        tmEventSetup.Tau: Range(0, 11),
+        tmEventSetup.Muon: Range(0, 7),
+    }
     def __init__(self, handle):
         self.type = self.Types[handle.getType()]
         self.threshold = 0
         self.comparison_mode = self.ComparisonTypes[handle.getComparisonOperator()]
-        self.slice = Range(0, 12)
+        self.slice = self.SliceTypes[handle.getType()]
         self.eta = []
         self.phi = []
         self.isolationLUT = self.IsoTypes[handle.getType()]
@@ -111,7 +117,7 @@ class ObjectHelper(object):
             if type_ == tmEventSetup.Threshold:
                 self.threshold = cut.getMinimum().index
             elif type_ == tmEventSetup.Slice:
-                self.slice = Range(cut.getMinimum().index, cut.getMaximum().index)
+                self.slice = Range(int(cut.getMinimum().value), int(cut.getMaximum().value))
             elif type_ == tmEventSetup.Eta:
                 self.eta.append(Range(cut.getMinimum().index, cut.getMaximum().index))
             elif type_ == tmEventSetup.Phi:
