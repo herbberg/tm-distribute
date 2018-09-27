@@ -11,6 +11,6 @@ const {{ c.objects[0].type }}_obj_requ_t {{ c.name }}[{{ c.objects|count }}] = {
         .phi={{ o.phi|c_init_list }},
         .n_phi={{ o.phi|count }},
     },
-{% endfor -%}
+{%- endfor %}
 };
 {% endblock code %}
