@@ -28,15 +28,15 @@ def string(s):
 def init_list(args):
     """C99/C++98 compliant initalizer list for C99 arrays and C99 structs.
 
-    >>> init_list(['spam', 42])
-    '{"spam", 42}'
+    >>> init_list([1, [2, 3]])
+    '{1, {2, 3}}'
     """
     values = []
     for arg in args:
         if isinstance(arg, bool):
             arg = boolean(arg)
-        if isinstance(arg, str):
-            arg = string(arg)
+        elif isinstance(arg, list):
+            arg = init_list(arg)
         values.append(format(arg))
     return '{{{}}}'.format(', '.join(values))
 
