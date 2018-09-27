@@ -24,13 +24,8 @@ struct logic
 #pragma HLS ARRAY_PARTITION variable=in_data.jet complete dim=1
 #pragma HLS ARRAY_PARTITION variable=in_data.tau complete dim=1
 #pragma HLS ARRAY_PARTITION variable=in_data.muon complete dim=1
-{%- for c in conditions %}
-{%- if c.objects[0].type in ('eg', 'jet', 'tau') %}
-        {{ c.name }} = {{ c.type }}<{{ c.objects[0].type }}_obj_requ_t, {{ c.objects[0].type }}_obj_t ,{{ c.objects|count }}, 12>(cuts::{{ c.name }}, in_data.{{ c.objects[0].type }});
-{%- elif c.objects[0].type == 'muon' %}
-        {{ c.name }} = {{ c.type }}<{{ c.objects[0].type }}_obj_requ_t, {{ c.objects[0].type }}_obj_t ,{{ c.objects|count }}, 8>(cuts::{{ c.name }}, in_data.{{ c.objects[0].type }});
-{%- endif %}
-{%- endfor %}
+        {% include 'conditions/calo_comb.hxx' -%}
+        {% include 'conditions/muon_comb.hxx' %}
     }
 };
 
