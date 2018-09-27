@@ -100,6 +100,7 @@ class ObjectHelper(object):
         tmEventSetup.Jet: Range(0, 11),
         tmEventSetup.Tau: Range(0, 11),
         tmEventSetup.Muon: Range(0, 7),
+        tmEventSetup.EXT: Range(0, 0),
     }
     def __init__(self, handle):
         self.type = self.Types[handle.getType()]
