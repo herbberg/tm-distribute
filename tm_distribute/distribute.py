@@ -60,24 +60,51 @@ class Lut(object):
     def __str__(self):
         return filters.hls.init_list(self.values)
 
+def charge_encode(value):
+    """Encode charge value to HLS string literal."""
+    if value in ('positive', 'pos', '1'):
+        return 'POSITIVE' # positive
+    if value in ('negative', 'neg', '-1'):
+        return 'NEGATIVE' # negative
+    return 'IGNORE' # ignore
+
 class ObjectHelper(object):
     Types = {
         tmEventSetup.Egamma: 'eg',
         tmEventSetup.Jet: 'jet',
+        tmEventSetup.Tau: 'tau',
+        tmEventSetup.Muon: 'muon',
         tmEventSetup.EXT: 'external',
     }
     IsoTypes = {
         tmEventSetup.Egamma: Lut(True, 4),
         tmEventSetup.Jet: None,
+        tmEventSetup.Tau: Lut(True, 4),
+        tmEventSetup.Muon: Lut(True, 4),
         tmEventSetup.EXT: None,
+    }
+    QualTypes = {
+        tmEventSetup.Egamma: None,
+        tmEventSetup.Jet: None,
+        tmEventSetup.Tau: None,
+        tmEventSetup.Muon: Lut(True, 16),
+        tmEventSetup.EXT: None,
+    }
+    ComparisonTypes = {
+        tmEventSetup.GE: 'GE',
+        tmEventSetup.NE: 'NE',
+        tmEventSetup.EQ: 'EQ',
     }
     def __init__(self, handle):
         self.type = self.Types[handle.getType()]
         self.threshold = 0
+        self.comparison_mode = self.ComparisonTypes[handle.getComparisonOperator()]
         self.slice = Range(0, 12)
         self.eta = []
         self.phi = []
-        self.iso = self.IsoTypes[handle.getType()]
+        self.isolationLUT = self.IsoTypes[handle.getType()]
+        self.qualityLUT = self.QualTypes[handle.getType()]
+        self.charge = charge_encode('IGNORE')
         self._init_external(handle)
         for cut in handle.getCuts():
             type_ = cut.getCutType()
@@ -89,10 +116,16 @@ class ObjectHelper(object):
                 self.eta.append(Range(cut.getMinimum().index, cut.getMaximum().index))
             elif type_ == tmEventSetup.Phi:
                 self.phi.append(Range(cut.getMinimum().index, cut.getMaximum().index))
-            elif type_ == tmEventSetup.Iso:
-                self.iso = Lut(False, 4)
+            elif type_ == tmEventSetup.Isolation:
+                self.isolationLUT = Lut(False, 4)
                 for key in cut_data_lut(cut.getData()):
-                    self.iso[key] = True
+                    self.isolationLUT[key] = True
+            elif type_ == tmEventSetup.Quality:
+                self.qualityLUT = Lut(False, 16)
+                for key in cut_data_lut(cut.getData()):
+                    self.qualityLUT[key] = True
+            elif type_ == tmEventSetup.Charge:
+                self.charge = charge_encode(cut.getData())
     def _init_external(self, handle):
         """Handle external object specific attributes."""
         # External objects only
@@ -115,6 +148,14 @@ class ConditionHelper(object):
         tmEventSetup.DoubleJet: CombCondition,
         tmEventSetup.TripleJet: CombCondition,
         tmEventSetup.QuadJet: CombCondition,
+        tmEventSetup.SingleTau: CombCondition,
+        tmEventSetup.DoubleTau: CombCondition,
+        tmEventSetup.TripleTau: CombCondition,
+        tmEventSetup.QuadTau: CombCondition,
+        tmEventSetup.SingleMuon: CombCondition,
+        tmEventSetup.DoubleMuon: CombCondition,
+        tmEventSetup.TripleMuon: CombCondition,
+        tmEventSetup.QuadMuon: CombCondition,
         tmEventSetup.Externals: ExtCondition,
     }
     def __init__(self, handle):

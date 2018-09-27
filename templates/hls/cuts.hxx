@@ -5,25 +5,9 @@
 
 namespace impl {
 namespace cuts {
-
-{% for c in conditions -%}
-const {{ c.objects[0].type }}_obj_requ_t {{ c.name }}[{{ c.objects|count }}] = {
-{%- for o in c.objects %}
-    {
-        .n_cuts={{ c.objects|count }},
-        .n_obj={{ o.slice.maximum }},
-        .pt={{ o.threshold|c_hex(4) }},
-        .eta={{ o.eta|c_init_list }},
-        .n_eta={{ o.eta|count }},
-        .phi={{ o.phi|c_init_list }},
-        .n_phi={{ o.phi|count }},
-{%- if o.iso %}
-        .iso_lut={{ o.iso }},
-{% endif %}
-    },
-{%- endfor %}
-};
-{% endfor %}
+{%- for c in conditions -%}
+{% include 'cuts/'~ c.objects[0].type ~'_cuts.hxx' %}
+{% endfor -%}
 } // namespace cuts
 } // namespace impl
 
