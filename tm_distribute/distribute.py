@@ -20,7 +20,7 @@ import filters.generic
 import filters.hls
 import filters.vhdl
 
-__version__ = '0.0.5'
+__version__ = '0.0.6'
 
 def cut_data_lut(data):
     """Returns list of cut data values.
@@ -74,6 +74,14 @@ class ObjectHelper(object):
         tmEventSetup.Jet: 'jet',
         tmEventSetup.Tau: 'tau',
         tmEventSetup.Muon: 'muon',
+        tmEventSetup.CENT0: 'cent',
+        tmEventSetup.CENT1: 'cent',
+        tmEventSetup.CENT2: 'cent',
+        tmEventSetup.CENT3: 'cent',
+        tmEventSetup.CENT4: 'cent',
+        tmEventSetup.CENT5: 'cent',
+        tmEventSetup.CENT7: 'cent',
+        tmEventSetup.CENT7: 'cent',
         tmEventSetup.EXT: 'external',
     }
     IsoTypes = {
@@ -81,6 +89,14 @@ class ObjectHelper(object):
         tmEventSetup.Jet: None,
         tmEventSetup.Tau: Lut(True, 4),
         tmEventSetup.Muon: Lut(True, 4),
+        tmEventSetup.CENT0: None,
+        tmEventSetup.CENT1: None,
+        tmEventSetup.CENT2: None,
+        tmEventSetup.CENT3: None,
+        tmEventSetup.CENT4: None,
+        tmEventSetup.CENT5: None,
+        tmEventSetup.CENT7: None,
+        tmEventSetup.CENT7: None,
         tmEventSetup.EXT: None,
     }
     QualTypes = {
@@ -88,6 +104,14 @@ class ObjectHelper(object):
         tmEventSetup.Jet: None,
         tmEventSetup.Tau: None,
         tmEventSetup.Muon: Lut(True, 16),
+        tmEventSetup.CENT0: None,
+        tmEventSetup.CENT1: None,
+        tmEventSetup.CENT2: None,
+        tmEventSetup.CENT3: None,
+        tmEventSetup.CENT4: None,
+        tmEventSetup.CENT5: None,
+        tmEventSetup.CENT7: None,
+        tmEventSetup.CENT7: None,
         tmEventSetup.EXT: None,
     }
     ComparisonTypes = {
@@ -100,7 +124,25 @@ class ObjectHelper(object):
         tmEventSetup.Jet: Range(0, 11),
         tmEventSetup.Tau: Range(0, 11),
         tmEventSetup.Muon: Range(0, 7),
+        tmEventSetup.CENT0: Range(0, 0),
+        tmEventSetup.CENT1: Range(0, 0),
+        tmEventSetup.CENT2: Range(0, 0),
+        tmEventSetup.CENT3: Range(0, 0),
+        tmEventSetup.CENT4: Range(0, 0),
+        tmEventSetup.CENT5: Range(0, 0),
+        tmEventSetup.CENT7: Range(0, 0),
+        tmEventSetup.CENT7: Range(0, 0),
         tmEventSetup.EXT: Range(0, 0),
+    }
+    CentralityChannels = {
+        tmEventSetup.CENT0: 0,
+        tmEventSetup.CENT1: 1,
+        tmEventSetup.CENT2: 2,
+        tmEventSetup.CENT3: 3,
+        tmEventSetup.CENT4: 4,
+        tmEventSetup.CENT5: 5,
+        tmEventSetup.CENT6: 6,
+        tmEventSetup.CENT7: 7,
     }
     def __init__(self, handle):
         self.type = self.Types[handle.getType()]
@@ -112,6 +154,7 @@ class ObjectHelper(object):
         self.isolationLUT = self.IsoTypes[handle.getType()]
         self.qualityLUT = self.QualTypes[handle.getType()]
         self.charge = charge_encode('IGNORE')
+        self._init_cent(handle)
         self._init_external(handle)
         for cut in handle.getCuts():
             type_ = cut.getCutType()
@@ -133,9 +176,16 @@ class ObjectHelper(object):
                     self.qualityLUT[key] = True
             elif type_ == tmEventSetup.Charge:
                 self.charge = charge_encode(cut.getData())
+    def _init_cent(self, handle):
+        """Handle centrality signal specific attributes."""
+        if handle.getType() in self.CentralityChannels.keys():
+            self.cent_signal_name = handle.getName()
+            self.cent_channel_id = self.CentralityChannels[handle.getType()]
+        else:
+            self.cent_signal_name = None
+            self.cent_channel_id = None
     def _init_external(self, handle):
-        """Handle external object specific attributes."""
-        # External objects only
+        """Handle external signal specific attributes."""
         if handle.getType() == tmEventSetup.EXT:
             self.ext_signal_name = handle.getExternalSignalName()
             self.ext_channel_id = handle.getExternalChannelId()
@@ -145,6 +195,7 @@ class ObjectHelper(object):
 
 class ConditionHelper(object):
     CombCondition = 'comb_cond'
+    CentCondition = 'cent_cond'
     ExtCondition = 'ext_cond'
     Types = {
         tmEventSetup.SingleEgamma: CombCondition,
@@ -163,6 +214,14 @@ class ConditionHelper(object):
         tmEventSetup.DoubleMuon: CombCondition,
         tmEventSetup.TripleMuon: CombCondition,
         tmEventSetup.QuadMuon: CombCondition,
+        tmEventSetup.Centrality0: CentCondition,
+        tmEventSetup.Centrality1: CentCondition,
+        tmEventSetup.Centrality2: CentCondition,
+        tmEventSetup.Centrality3: CentCondition,
+        tmEventSetup.Centrality4: CentCondition,
+        tmEventSetup.Centrality5: CentCondition,
+        tmEventSetup.Centrality6: CentCondition,
+        tmEventSetup.Centrality7: CentCondition,
         tmEventSetup.Externals: ExtCondition,
     }
     def __init__(self, handle):
@@ -194,6 +253,8 @@ class SeedHelper(object):
             return "{}.{}".format(self.condition_namespace, name)
         expr = re.sub(r'([\w_]+_i\d+)', condition_rename, expr)
         return expr
+
+# TODO split HLS and VHDL tempalte engines/filters
 
 CustomFilters = {
     'c_hex': filters.hls.hex,
