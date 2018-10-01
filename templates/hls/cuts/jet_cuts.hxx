@@ -1,5 +1,5 @@
 {% block code %}
-const {{ c.objects[0].type }}_obj_requ_t {{ c.name }}[{{ c.objects|count }}] = {
+const gtl::cut::{{ c.objects[0].type }} {{ c.name }}[{{ c.objects|count }}] = {
 {%- for o in c.objects %}
     {
         .n_cuts={{ c.objects|count }},
