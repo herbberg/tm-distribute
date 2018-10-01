@@ -12,6 +12,6 @@ const {{ c.objects[0].type }}_obj_requ_t {{ c.name }}[{{ c.objects|count }}] = {
         .n_phi={{ o.phi|count }},
         .iso_lut={{ o.isolationLUT }},
     },
-{% endfor -%}
+{%- endfor %}
 };
 {% endblock code %}

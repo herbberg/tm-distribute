@@ -25,7 +25,7 @@ struct logic
 #pragma HLS ARRAY_PARTITION variable=in_data.tau complete dim=1
 #pragma HLS ARRAY_PARTITION variable=in_data.muon complete dim=1
 {% for c in conditions %}
-        {%- include 'conditions/comb_conditions.hxx' -%}
+        {%- include 'conditions/' ~ c.type ~ '.hxx' -%}
 {% endfor %}
     }
 };

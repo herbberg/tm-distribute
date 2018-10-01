@@ -14,6 +14,6 @@ const {{ c.objects[0].type }}_obj_requ_t {{ c.name }}[{{ c.objects|count }}] = {
         .qual_lut={{ o.qualityLUT }},
         .requested_charge=muon_obj_requ_t::{{ o.charge }},
     },
-{% endfor -%}
+{%- endfor %}
 };
 {% endblock code %}
