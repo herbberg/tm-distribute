@@ -12,7 +12,7 @@ const gtl::cut::{{ c.objects[0].type }} {{ c.name }}[{{ c.objects|count }}] = {
         .n_phi={{ o.phi|count }},
         .iso_lut={{ o.isolationLUT }},
         .qual_lut={{ o.qualityLUT }},
-        .requested_charge=muon_obj_requ_t::{{ o.charge }},
+        .requested_charge=gtl::cut::{{ c.objects[0].type }}::{{ o.charge }},
     },
 {%- endfor %}
 };
