@@ -252,6 +252,7 @@ class ObjectHelper(object):
 class ConditionHelper(object):
     CombType = 'comb'
     SignalType = 'signal'
+    CountType = 'count'
     Types = {
         tmEventSetup.SingleEgamma: CombType,
         tmEventSetup.DoubleEgamma: CombType,
@@ -274,15 +275,15 @@ class ConditionHelper(object):
         tmEventSetup.MissingEt: CombType,   
         tmEventSetup.MissingHt: CombType,   
         tmEventSetup.TotalEtEM: CombType,   
-        tmEventSetup.MissingEtHF: CombType, 
-        tmEventSetup.MinBiasHFP0: CombType, 
-        tmEventSetup.MinBiasHFP1: CombType, 
-        tmEventSetup.MinBiasHFM0: CombType, 
-        tmEventSetup.MinBiasHFM1: CombType, 
-        tmEventSetup.AsymmetryEt: CombType,
-        tmEventSetup.AsymmetryHt: CombType,
-        tmEventSetup.AsymmetryEtHF: CombType,
-        tmEventSetup.AsymmetryHtHF: CombType,
+        tmEventSetup.MissingEtHF: CountType, 
+        tmEventSetup.MinBiasHFP0: CountType, 
+        tmEventSetup.MinBiasHFP1: CountType, 
+        tmEventSetup.MinBiasHFM0: CountType, 
+        tmEventSetup.MinBiasHFM1: CountType, 
+        tmEventSetup.AsymmetryEt: CountType,
+        tmEventSetup.AsymmetryHt: CountType,
+        tmEventSetup.AsymmetryEtHF: CountType,
+        tmEventSetup.AsymmetryHtHF: CountType,
         tmEventSetup.Centrality0: SignalType,
         tmEventSetup.Centrality1: SignalType,
         tmEventSetup.Centrality2: SignalType,
