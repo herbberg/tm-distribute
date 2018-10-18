@@ -24,6 +24,14 @@ struct logic
 #pragma HLS ARRAY_PARTITION variable=in_data.jet complete dim=1
 #pragma HLS ARRAY_PARTITION variable=in_data.tau complete dim=1
 #pragma HLS ARRAY_PARTITION variable=in_data.muon complete dim=1
+#pragma HLS ARRAY_PARTITION variable=in_data.asymmetry_et complete dim=1
+#pragma HLS ARRAY_PARTITION variable=in_data.asymmetry_ht complete dim=1
+#pragma HLS ARRAY_PARTITION variable=in_data.asymmetry_ethf complete dim=1
+#pragma HLS ARRAY_PARTITION variable=in_data.asymmetry_hthf complete dim=1
+#pragma HLS ARRAY_PARTITION variable=in_data.mbt0hfp complete dim=1
+#pragma HLS ARRAY_PARTITION variable=in_data.mbt0hfm complete dim=1
+#pragma HLS ARRAY_PARTITION variable=in_data.mbt1hfp complete dim=1
+#pragma HLS ARRAY_PARTITION variable=in_data.mbt1hfm complete dim=1
 {% for c in conditions %}
         {%- include 'conditions/%s.hxx' % c.type -%}
 {% endfor %}
