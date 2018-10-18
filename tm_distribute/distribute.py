@@ -255,6 +255,7 @@ class ConditionHelper(object):
     CombType = 'comb'
     SignalType = 'signal'
     CountType = 'count'
+    EsumsType = 'esums'
     Types = {
         tmEventSetup.SingleEgamma: CombType,
         tmEventSetup.DoubleEgamma: CombType,
@@ -272,11 +273,11 @@ class ConditionHelper(object):
         tmEventSetup.DoubleMuon: CombType,
         tmEventSetup.TripleMuon: CombType,
         tmEventSetup.QuadMuon: CombType,        
-        tmEventSetup.TotalEt: CombType,     
-        tmEventSetup.TotalHt: CombType,     
-        tmEventSetup.MissingEt: CombType,   
-        tmEventSetup.MissingHt: CombType,   
-        tmEventSetup.TotalEtEM: CombType,   
+        tmEventSetup.TotalEt: EsumsType,     
+        tmEventSetup.TotalHt: EsumsType,     
+        tmEventSetup.MissingEt: EsumsType,   
+        tmEventSetup.MissingHt: EsumsType,   
+        tmEventSetup.TotalEtEM: EsumsType,   
         tmEventSetup.MissingEtHF: CountType, 
         tmEventSetup.MinBiasHFP0: CountType, 
         tmEventSetup.MinBiasHFP1: CountType, 
