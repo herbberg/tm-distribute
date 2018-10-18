@@ -218,7 +218,9 @@ class ObjectHelper(object):
         self._init_external(handle)
         for cut in handle.getCuts():
             type_ = cut.getCutType()
-            if type_ == tmEventSetup.Threshold or tmEventSetup.Count:
+            if type_ == tmEventSetup.Threshold:
+                self.threshold = cut.getMinimum().index
+            if type_ == tmEventSetup.Count:
                 self.threshold = cut.getMinimum().index
             elif type_ == tmEventSetup.Slice:
                 self.slice = Range(int(cut.getMinimum().value), int(cut.getMaximum().value))
