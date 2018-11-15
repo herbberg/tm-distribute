@@ -72,6 +72,26 @@ def charge_encode(value):
         return 'NEGATIVE' # negative
     return 'IGNORE' # ignore
 
+def charge_correlation_encode(value):
+    """Encode charge correlation value to VHDL string literal."""
+    if value in ('like', 'ls', '0'):
+        return 'ls' # like sign
+    if value in ('opposite', 'os', '1'):
+        return 'os' # opposite sign
+    return 'ig' # ignore
+
+def bx_encode(value):
+    """Encode relative bunch crossings into VHDL notation.
+    All positive values with the exception of zero are prefixed with m, all
+    negative values are prefixed with p instead of the minus sign.
+    """
+    # Prefix positive values greater then zero with p.
+    if value > 0: return 'p{0:d}'.format(value)
+    # Prefix negative values with m instead of minus sign (abs).
+    if value < 0: return 'm{0:d}'.format(abs(value))
+    # Zero value is not prefixed according to VHDL documentation.
+    return '0'
+
 class ObjectHelper(object):
     Types = {
         tmEventSetup.Egamma: 'eg',
@@ -206,6 +226,7 @@ class ObjectHelper(object):
     }
     def __init__(self, handle):
         self.type = self.Types[handle.getType()]
+        self.bx = bx_encode(handle.getBxOffset())
         self.threshold = 0
         self.comparison_mode = self.ComparisonTypes[handle.getComparisonOperator()]
         self.slice = self.SliceTypes[handle.getType()]
@@ -220,7 +241,7 @@ class ObjectHelper(object):
             type_ = cut.getCutType()
             if type_ == tmEventSetup.Threshold:
                 self.threshold = cut.getMinimum().index
-            if type_ == tmEventSetup.Count:
+            elif type_ == tmEventSetup.Count:
                 self.threshold = cut.getMinimum().index
             elif type_ == tmEventSetup.Slice:
                 self.slice = Range(int(cut.getMinimum().value), int(cut.getMaximum().value))
@@ -297,12 +318,20 @@ class ConditionHelper(object):
         tmEventSetup.Centrality7: SignalType,
         tmEventSetup.Externals: SignalType,
     }
+    ChargeCorrelationTypes = {
+        'ls': 'LS',
+        'os': 'OS',
+    }
     def __init__(self, handle):
         self.name = filters.generic.snakecase(handle.getName())
         self.type = self.Types[handle.getType()]
         self.objects = []
         for object_ in handle.getObjects():
             self.objects.append(ObjectHelper(object_))
+        self.charge_correlation = None
+        for cut in handle.getCuts():
+            if cut.getCutType() == tmEventSetup.ChargeCorrelation:
+                self.charge_correlation = self.ChargeCorrelationTypes[cut.getData()]
 
 class SeedHelper(object):
     Operators = {

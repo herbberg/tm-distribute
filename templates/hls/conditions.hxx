@@ -18,20 +18,26 @@ struct logic
 {%- endfor %}
 
     /* Process input data and update condition signals. */
-    void process(const in_data_t& in_data)
+    void process(const in_data_t in_data[N_BX_DATA])
     {
-#pragma HLS ARRAY_PARTITION variable=in_data.eg complete dim=1
-#pragma HLS ARRAY_PARTITION variable=in_data.jet complete dim=1
-#pragma HLS ARRAY_PARTITION variable=in_data.tau complete dim=1
-#pragma HLS ARRAY_PARTITION variable=in_data.muon complete dim=1
-#pragma HLS ARRAY_PARTITION variable=in_data.asymmetry_et complete dim=1
-#pragma HLS ARRAY_PARTITION variable=in_data.asymmetry_ht complete dim=1
-#pragma HLS ARRAY_PARTITION variable=in_data.asymmetry_ethf complete dim=1
-#pragma HLS ARRAY_PARTITION variable=in_data.asymmetry_hthf complete dim=1
-#pragma HLS ARRAY_PARTITION variable=in_data.mbt0hfp complete dim=1
-#pragma HLS ARRAY_PARTITION variable=in_data.mbt0hfm complete dim=1
-#pragma HLS ARRAY_PARTITION variable=in_data.mbt1hfp complete dim=1
-#pragma HLS ARRAY_PARTITION variable=in_data.mbt1hfm complete dim=1
+#pragma HLS ARRAY_PARTITION variable=in_data.eg complete dim=0
+#pragma HLS ARRAY_PARTITION variable=in_data.jet complete dim=0
+#pragma HLS ARRAY_PARTITION variable=in_data.tau complete dim=0
+#pragma HLS ARRAY_PARTITION variable=in_data.muon complete dim=0
+#pragma HLS ARRAY_PARTITION variable=in_data.ett complete dim=0
+#pragma HLS ARRAY_PARTITION variable=in_data.htt complete dim=0
+#pragma HLS ARRAY_PARTITION variable=in_data.etm complete dim=0
+#pragma HLS ARRAY_PARTITION variable=in_data.htm complete dim=0
+#pragma HLS ARRAY_PARTITION variable=in_data.ettem complete dim=0
+#pragma HLS ARRAY_PARTITION variable=in_data.etmhf complete dim=0
+#pragma HLS ARRAY_PARTITION variable=in_data.asymmetry_et complete dim=0
+#pragma HLS ARRAY_PARTITION variable=in_data.asymmetry_ht complete dim=0
+#pragma HLS ARRAY_PARTITION variable=in_data.asymmetry_ethf complete dim=0
+#pragma HLS ARRAY_PARTITION variable=in_data.asymmetry_hthf complete dim=0
+#pragma HLS ARRAY_PARTITION variable=in_data.mbt0hfp complete dim=0
+#pragma HLS ARRAY_PARTITION variable=in_data.mbt0hfm complete dim=0
+#pragma HLS ARRAY_PARTITION variable=in_data.mbt1hfp complete dim=0
+#pragma HLS ARRAY_PARTITION variable=in_data.mbt1hfm complete dim=0
 {% for c in conditions %}
         {%- include 'conditions/%s.hxx' % c.type -%}
 {% endfor %}
