@@ -18,7 +18,7 @@ struct logic
 {%- endfor %}
 
     /* Process input data and update condition signals. */
-    void process(const in_data_t in_data[N_BX_DATA])
+    void process(const in_data_t in_data[N_BX_DATA], const cc_bx_comb_t charge_correlation[cc_bx_comb_type::bx_comb_size])
     {
 #pragma HLS ARRAY_PARTITION variable=in_data.eg complete dim=0
 #pragma HLS ARRAY_PARTITION variable=in_data.jet complete dim=0
@@ -38,6 +38,11 @@ struct logic
 #pragma HLS ARRAY_PARTITION variable=in_data.mbt0hfm complete dim=0
 #pragma HLS ARRAY_PARTITION variable=in_data.mbt1hfp complete dim=0
 #pragma HLS ARRAY_PARTITION variable=in_data.mbt1hfm complete dim=0
+#pragma HLS ARRAY_PARTITION variable=charge_correlation.cc_double complete dim=0
+#pragma HLS ARRAY_PARTITION variable=charge_correlation.cc_triple complete dim=0
+#pragma HLS ARRAY_PARTITION variable=charge_correlation.cc_quad complete dim=0
+        
+        using namespace cc_bx_comb_type;
 {% for c in conditions %}
         {%- include 'conditions/%s.hxx' % c.type -%}
 {% endfor %}
